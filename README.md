@@ -1,5 +1,7 @@
 # TODOMVC + HTMX
 
+[![Build Status](https://github.com/ryands17/htmx-todomvc/actions/workflows/build.yaml/badge.svg)](https://github.com/ryands17/htmx-todomvc/actions/workflows/build.yaml)
+
 This is a simple TODOMVC app made with [HTMX](https://htmx.org/) and Express as the backend.
 
 ## Prerequisites

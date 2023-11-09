@@ -44,7 +44,6 @@ app.get('/', (req, res) => {
                 hx-trigger="keyup[keyCode==13]"
                 hx-target=".todo-list"
                 _="on htmx:afterOnLoad set target.value to ''"
-                // _="on keyup[key is 'Enter'] set target.value to ''"
                 hx-swap="beforeend"
               />
             </header>

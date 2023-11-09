@@ -23,4 +23,8 @@ export const ToggleAllTodosSchema = z.object({
     .transform((val) => (val ? val : 'off')),
 });
 
+export const EditTodoSchema = z.object({
+  todoText: z.string().trim(),
+});
+
 export type Todo = z.infer<typeof TodoSchema>;

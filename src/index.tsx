@@ -147,6 +147,17 @@ app.post('/todos/toggle/:id', (req, res) => {
   }
 });
 
+app.put('/todos/:id', (req, res) => {
+  const { todoText } = schemas.EditTodoSchema.parse(req.body);
+  const params = schemas.TodoOperationParamsSchema.parse(req.params);
+
+  const todo = db.find((val) => val.id === params.id);
+  if (todo) {
+    todo.text = todoText;
+    res.send(<TodoItem todo={todo} />);
+  }
+});
+
 app.delete(`/todos/:id`, (req, res) => {
   const params = schemas.TodoOperationParamsSchema.parse(req.params);
 

@@ -35,7 +35,9 @@ export function TodoItem({ todo }: { todo: Todo }) {
           hx-target="closest li"
           hx-swap="outerHTML"
         />
-        <label safe>{todo.text}</label>
+        <label safe _="on dblclick add .editing to the closest parent <li/>">
+          {todo.text}
+        </label>
         <button
           class="destroy"
           hx-delete={`/todos/${todo.id}`}
@@ -43,7 +45,16 @@ export function TodoItem({ todo }: { todo: Todo }) {
           hx-swap="outerHTML"
         />
       </div>
-      <input class="edit" />
+      <input
+        class="edit"
+        name="todoText"
+        value={todo.text}
+        _="on keyup[key is 'Escape'] remove .editing from the closest parent <li/>"
+        hx-put={`/todos/${todo.id}`}
+        hx-trigger="keyup[keyCode==13]"
+        hx-target="closest li"
+        hx-swap="outerHTML"
+      />
     </li>
   );
 }

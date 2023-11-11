@@ -10,15 +10,15 @@ const db: schemas.Todo[] = [
   { id: uuidv4(), text: 'Learn Vim', completed: true },
 ];
 
-const app = express();
+export const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/static', express.static('./public'));
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`App running on http://localhost:${PORT}`));
+// const PORT = 3000;
+// app.listen(PORT, () => console.log(`App running on http://localhost:${PORT}`));
 
 app.get('/', (req, res) => {
   const { filter } = schemas.FilterTodosSchema.parse(req.query);

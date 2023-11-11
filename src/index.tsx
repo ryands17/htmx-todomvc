@@ -17,9 +17,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/static', express.static('./public'));
 
-// const PORT = 3000;
-// app.listen(PORT, () => console.log(`App running on http://localhost:${PORT}`));
-
 app.get('/', (req, res) => {
   const { filter } = schemas.FilterTodosSchema.parse(req.query);
 

@@ -14,6 +14,9 @@ export function BaseHtml({ children }: html.PropsWithChildren) {
     <script src="/static/hyperscript@0.9.12.js"></script>
   </head>
   ${children}
+  <script>
+    htmx.config.globalViewTransitions = true
+  </script>
   </html>
 `;
 }

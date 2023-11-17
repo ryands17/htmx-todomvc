@@ -44,7 +44,7 @@ export function TodoItem({ todo }: { todo: Todo }) {
         </label>
         <button
           class="destroy"
-          hx-delete={`/todos/${todo.id}`}
+          hx-post={`/todos/${todo.id}`}
           hx-target="closest li"
           hx-swap="outerHTML"
         />

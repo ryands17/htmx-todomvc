@@ -183,7 +183,7 @@ app.put('/todos/:id', (req, res) => {
   }
 });
 
-app.delete(`/todos/:id`, (req, res) => {
+app.post(`/todos/:id`, (req, res) => {
   const params = schemas.TodoOperationParamsSchema.parse(req.params);
 
   const todoIndex = db.findIndex((val) => val.id === params.id);

@@ -3,12 +3,16 @@ import express from 'express';
 import * as schemas from './schemas.js';
 import { v4 as uuidv4 } from 'uuid';
 import { clsx } from 'clsx';
-import { BaseHtml, TodoItem, TodoList } from './components.js';
+import { BaseHtml, TodoCount, TodoItem, TodoList } from './components.js';
 
 const db: schemas.Todo[] = [
   { id: uuidv4(), text: 'Learn HTMX', completed: false },
   { id: uuidv4(), text: 'Learn Vim', completed: true },
 ];
+
+function fetchRemainingTodoCount() {
+  return db.filter((todo) => !todo.completed).length;
+}
 
 export const app = express();
 
@@ -46,12 +50,9 @@ app.get('/', (req, res) => {
             </header>
             <footer
               class="footer"
-              hx-get="/count"
-              hx-trigger="load, todoUpdate from:body"
-              hx-target=".todo-count"
-              hx-swap="innerHTML"
+              // hx-trigger="load, todoUpdate from:body"
             >
-              <span class="todo-count" />
+              <span id="todo-count" class="todo-count" />
               <ul class="filters">
                 <li>
                   <a href="/" class={clsx({ selected: filter === 'all' })}>
@@ -104,30 +105,36 @@ app.get('/', (req, res) => {
 
 app.get('/todos', (req, res) => {
   const { filter } = schemas.FilterTodosSchema.parse(req.query);
+  const remainingTodoCount = fetchRemainingTodoCount();
 
   switch (filter) {
-    case 'all':
-      return res.send(<TodoList todos={db} />);
+    case 'all': {
+      return res.send(
+        <>
+          <TodoList todos={db} />
+          <TodoCount count={remainingTodoCount} />
+        </>,
+      );
+    }
     case 'active': {
       const todos = db.filter((todo) => !todo.completed);
-      return res.send(<TodoList todos={todos} />);
+      return res.send(
+        <>
+          <TodoList todos={todos} />
+          <TodoCount count={remainingTodoCount} />
+        </>,
+      );
     }
     case 'completed': {
       const todos = db.filter((todo) => todo.completed);
-      return res.send(<TodoList todos={todos} />);
+      return res.send(
+        <>
+          <TodoList todos={todos} />
+          <TodoCount count={remainingTodoCount} />
+        </>,
+      );
     }
   }
-});
-
-app.get('/count', (_req, res) => {
-  const uncheckedTodoCount = db.filter((todo) => !todo.completed).length;
-  const todoText = uncheckedTodoCount === 1 ? 'todo' : 'todos';
-
-  res.send(
-    <span>
-      <strong>{uncheckedTodoCount}</strong> {todoText} left
-    </span>,
-  );
 });
 
 app.post('/todos/toggle/:id', (req, res) => {
@@ -137,10 +144,32 @@ app.post('/todos/toggle/:id', (req, res) => {
 
   if (todo) {
     todo.completed = !todo.completed;
+    const remainingTodoCount = fetchRemainingTodoCount();
 
-    res.setHeader('HX-Trigger', 'todoUpdate');
-    res.send(<TodoItem todo={todo} />);
+    res.send(
+      <>
+        <TodoItem todo={todo} />
+        <TodoCount count={remainingTodoCount} />
+      </>,
+    );
   }
+});
+
+app.put('/todos/toggle', (req, res) => {
+  const body = schemas.ToggleAllTodosSchema.parse(req.body);
+
+  db.forEach((todo) => {
+    todo.completed = body.allTodosDone === 'on' ? true : false;
+  });
+  const remainingTodoCount = fetchRemainingTodoCount();
+
+  // res.setHeader('HX-Trigger', 'todoUpdate');
+  res.send(
+    <>
+      <TodoList todos={db} />
+      <TodoCount count={remainingTodoCount} />
+    </>,
+  );
 });
 
 app.put('/todos/:id', (req, res) => {
@@ -161,32 +190,26 @@ app.delete(`/todos/:id`, (req, res) => {
   if (todoIndex !== -1) {
     db.splice(todoIndex, 1);
   }
-  res.setHeader('HX-Trigger', 'todoUpdate');
-  res.send();
+  const remainingTodoCount = fetchRemainingTodoCount();
+
+  res.send(<TodoCount count={remainingTodoCount} />);
 });
 
 app.post('/todo', (req, res) => {
   const todo = schemas.TodoSchema.parse(req.body);
   db.push(todo);
+  const remainingTodoCount = fetchRemainingTodoCount();
 
-  res.setHeader('HX-Trigger', 'todoUpdate');
-  res.send(<TodoItem todo={todo} />);
-});
-
-app.put('/todos/toggle', (req, res) => {
-  const body = schemas.ToggleAllTodosSchema.parse(req.body);
-
-  db.forEach((todo) => {
-    todo.completed = body.allTodosDone === 'on' ? true : false;
-  });
-
-  res.setHeader('HX-Trigger', 'todoUpdate');
-  res.send(<TodoList todos={db} />);
+  res.send(
+    <>
+      <TodoItem todo={todo} />
+      <TodoCount count={remainingTodoCount} />
+    </>,
+  );
 });
 
 app.put('/clear-completed', (_req, res) => {
   const todos = db.filter((todo) => !todo.completed);
 
-  res.setHeader('HX-Trigger', 'todoUpdate');
   res.send(<TodoList todos={todos} />);
 });

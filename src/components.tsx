@@ -15,7 +15,8 @@ export function BaseHtml({ children }: html.PropsWithChildren) {
   </head>
   ${children}
   <script>
-    htmx.config.globalViewTransitions = true
+    htmx.config.globalViewTransitions = true;
+    htmx.config.useTemplateFragments = true;
   </script>
   </html>
 `;
@@ -59,6 +60,16 @@ export function TodoItem({ todo }: { todo: Todo }) {
         hx-swap="outerHTML"
       />
     </li>
+  );
+}
+
+export function TodoCount({ count }: { count: number }) {
+  const todoText = count === 1 ? 'todo' : 'todos';
+
+  return (
+    <span hx-swap-oob="innerHTML:#todo-count">
+      <strong>{count}</strong> {todoText} left
+    </span>
   );
 }
 

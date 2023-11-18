@@ -13,6 +13,8 @@ export default {
 
     app.setDefaultFunctionProps({
       runtime: 'nodejs18.x',
+      memorySize: '256 MB',
+      timeout: '10 seconds',
     });
 
     Tags.of(app).add('version', packageJson.version);

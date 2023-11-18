@@ -17,8 +17,12 @@ This is a simple TODOMVC app made with [HTMX](https://htmx.org/) and Express as 
 
 ## Commands
 
-- pnpm dev - Runs the app in development using Nodemon
-- pnpm build - Builds the app using ESBuild for production
+- pnpm app:dev - Runs the app in development using Nodemon
+- pnpm app:build - Builds the app using ESBuild for production
+- pnpm build - Builds the SST app ready to be deployed
+- pnpm deploy - Deploys the SST stack with this app to AWS (Uses Lambda and S3 + CloudFront)
+- pnpm destroy - Destroys the deployed SST stack
+- pnpm lint - Runs the TypeScript type checker and scans for XSS vulnerabilities
 - pnpm start - Starts the app in production
 
 ## Things to do:

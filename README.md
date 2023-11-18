@@ -27,5 +27,5 @@ This is a simple TODOMVC app made with [HTMX](https://htmx.org/) and Express as 
 
 ## Things to do:
 
+- [x] Deploy the app on AWS (via SST)
 - [ ] Add a backend database for todos (preferably DynamoDB)
-- [ ] Deploy the app on AWS (via SST)

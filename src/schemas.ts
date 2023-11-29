@@ -2,7 +2,10 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 
 export const TodoSchema = z.object({
-  id: z.string().uuid().default(uuidv4()),
+  id: z
+    .string()
+    .uuid()
+    .default(() => uuidv4()),
   text: z.string().min(1, 'Content is required!'),
   completed: z.boolean().default(false),
 });

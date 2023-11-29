@@ -14,11 +14,18 @@ function setLogRetention(stage: AppStage) {
 }
 
 export function SsrStack({ stack }: { stack: sst.Stack }) {
+  const todosTable = new sst.Table(stack, 'todosTable', {
+    fields: { pk: 'string', sk: 'string' },
+    primaryIndex: { partitionKey: 'pk', sortKey: 'sk' },
+  });
+
   const name = 'todoMvc';
   const todoApp = new sst.Function(stack, name, {
     handler: 'src/app.handler',
     url: true,
   });
+
+  todoApp.bind([todosTable]);
 
   new LogGroup(stack, `${name}Logs`, {
     logGroupName: `/aws/lambda/${todoApp.functionName}`,

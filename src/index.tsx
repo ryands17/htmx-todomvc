@@ -4,14 +4,17 @@ import * as schemas from './schemas.js';
 import { v4 as uuidv4 } from 'uuid';
 import { clsx } from 'clsx';
 import { BaseHtml, TodoCount, TodoItem, TodoList } from './components.js';
+import { TodoModel } from './model.js';
 
-const db: schemas.Todo[] = [
-  { id: uuidv4(), text: 'Learn HTMX', completed: false },
-  { id: uuidv4(), text: 'Learn Vim', completed: true },
-];
+const NAMESPACE = 'default';
 
-function fetchRemainingTodoCount() {
-  return db.filter((todo) => !todo.completed).length;
+async function fetchRemainingTodoCount() {
+  const remainingTodos = await TodoModel.query
+    .todos({ namespace: NAMESPACE })
+    .where((attr, op) => op.eq(attr.completed, false))
+    .go();
+
+  return remainingTodos.data.length;
 }
 
 export const app = express();
@@ -41,7 +44,7 @@ app.get('/', (req, res) => {
                 name="text"
                 placeholder="What needs to be done?"
                 autofocus="true"
-                hx-post="/todo"
+                hx-post="/todos"
                 hx-trigger="keyup[keyCode==13]"
                 hx-target=".todo-list"
                 _="on htmx:afterOnLoad set target.value to ''"
@@ -103,33 +106,45 @@ app.get('/', (req, res) => {
   res.send(main);
 });
 
-app.get('/todos', (req, res) => {
+app.get('/todos', async (req, res) => {
   const { filter } = schemas.FilterTodosSchema.parse(req.query);
-  const remainingTodoCount = fetchRemainingTodoCount();
+  const remainingTodoCount = await fetchRemainingTodoCount();
 
   switch (filter) {
     case 'all': {
+      const { data } = await TodoModel.query
+        .todos({ namespace: NAMESPACE })
+        .go();
+
       return res.send(
         <>
-          <TodoList todos={db} />
+          <TodoList todos={data} />
           <TodoCount count={remainingTodoCount} />
         </>,
       );
     }
     case 'active': {
-      const todos = db.filter((todo) => !todo.completed);
+      const { data } = await TodoModel.query
+        .todos({ namespace: NAMESPACE })
+        .where((attr, op) => op.eq(attr.completed, false))
+        .go();
+
       return res.send(
         <>
-          <TodoList todos={todos} />
+          <TodoList todos={data} />
           <TodoCount count={remainingTodoCount} />
         </>,
       );
     }
     case 'completed': {
-      const todos = db.filter((todo) => todo.completed);
+      const { data } = await TodoModel.query
+        .todos({ namespace: NAMESPACE })
+        .where((attr, op) => op.eq(attr.completed, true))
+        .go();
+
       return res.send(
         <>
-          <TodoList todos={todos} />
+          <TodoList todos={data} />
           <TodoCount count={remainingTodoCount} />
         </>,
       );
@@ -137,14 +152,35 @@ app.get('/todos', (req, res) => {
   }
 });
 
-app.post('/todos/toggle/:id', (req, res) => {
+app.post('/todos', async (req, res) => {
+  const todo = schemas.TodoSchema.parse(req.body);
+
+  await TodoModel.create(todo).go();
+  const remainingTodoCount = await fetchRemainingTodoCount();
+
+  res.send(
+    <>
+      <TodoItem todo={todo} />
+      <TodoCount count={remainingTodoCount} />
+    </>,
+  );
+});
+
+app.post('/todos/toggle/:id', async (req, res) => {
   const params = schemas.TodoOperationParamsSchema.parse(req.params);
 
-  const todo = db.find((val) => val.id === params.id);
+  const { data: todo } = await TodoModel.get({
+    namespace: NAMESPACE,
+    id: params.id,
+  }).go();
 
   if (todo) {
+    await TodoModel.patch({ namespace: NAMESPACE, id: params.id })
+      .set({ completed: !todo.completed })
+      .go();
+
     todo.completed = !todo.completed;
-    const remainingTodoCount = fetchRemainingTodoCount();
+    const remainingTodoCount = await fetchRemainingTodoCount();
 
     res.send(
       <>
@@ -155,61 +191,73 @@ app.post('/todos/toggle/:id', (req, res) => {
   }
 });
 
-app.put('/todos/toggle', (req, res) => {
+app.put('/todos/toggle', async (req, res) => {
   const body = schemas.ToggleAllTodosSchema.parse(req.body);
+  const { data: allTodos } = await TodoModel.query
+    .todos({ namespace: NAMESPACE })
+    .go();
 
-  db.forEach((todo) => {
-    todo.completed = body.allTodosDone === 'on' ? true : false;
-  });
-  const remainingTodoCount = fetchRemainingTodoCount();
+  const todos = allTodos.map((todo) => ({
+    ...todo,
+    completed: body.allTodosDone === 'on',
+  }));
+
+  await TodoModel.put(todos).go();
+
+  const remainingTodoCount = await fetchRemainingTodoCount();
 
   // res.setHeader('HX-Trigger', 'todoUpdate');
   res.send(
     <>
-      <TodoList todos={db} />
+      <TodoList todos={todos} />
       <TodoCount count={remainingTodoCount} />
     </>,
   );
 });
 
-app.put('/todos/:id', (req, res) => {
+app.put('/todos/:id', async (req, res) => {
   const { todoText } = schemas.EditTodoSchema.parse(req.body);
   const params = schemas.TodoOperationParamsSchema.parse(req.params);
 
-  const todo = db.find((val) => val.id === params.id);
+  const { data: todo } = await TodoModel.get({
+    namespace: NAMESPACE,
+    id: params.id,
+  }).go();
+
   if (todo) {
+    await TodoModel.patch({ namespace: NAMESPACE, id: params.id })
+      .set({ text: todoText })
+      .go();
+
     todo.text = todoText;
     res.send(<TodoItem todo={todo} />);
   }
 });
 
-app.post(`/todos/:id`, (req, res) => {
+// deleting a todo
+app.post(`/todos/:id`, async (req, res) => {
   const params = schemas.TodoOperationParamsSchema.parse(req.params);
 
-  const todoIndex = db.findIndex((val) => val.id === params.id);
-  if (todoIndex !== -1) {
-    db.splice(todoIndex, 1);
-  }
-  const remainingTodoCount = fetchRemainingTodoCount();
+  await TodoModel.delete({ namespace: NAMESPACE, id: params.id }).go();
+  const remainingTodoCount = await fetchRemainingTodoCount();
 
   res.send(<TodoCount count={remainingTodoCount} />);
 });
 
-app.post('/todo', (req, res) => {
-  const todo = schemas.TodoSchema.parse(req.body);
-  db.push(todo);
-  const remainingTodoCount = fetchRemainingTodoCount();
+app.put('/clear-completed', async (_req, res) => {
+  const { data: completedTodos } = await TodoModel.query
+    .todos({ namespace: NAMESPACE })
+    .where((attr, op) => op.eq(attr.completed, true))
+    .go();
 
-  res.send(
-    <>
-      <TodoItem todo={todo} />
-      <TodoCount count={remainingTodoCount} />
-    </>,
-  );
-});
+  await TodoModel.delete(
+    completedTodos.map((todo) => ({ namespace: NAMESPACE, id: todo.id })),
+  ).go();
 
-app.put('/clear-completed', (_req, res) => {
-  const todos = db.filter((todo) => !todo.completed);
+  const { data: todos } = await TodoModel.query
+    .todos({ namespace: NAMESPACE })
+    .where((attr, op) => op.eq(attr.completed, false))
+    .go();
 
   res.send(<TodoList todos={todos} />);
 });

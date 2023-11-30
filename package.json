@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "sst dev",
-    "app:dev": "LOCAL_APP=true nodemon",
+    "app:dev": "IS_LOCAL=true sst bind nodemon",
     "lint": "tsc --noEmit && xss-scan",
     "build": "sst build",
     "deploy": "sst deploy",

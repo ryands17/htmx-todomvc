@@ -28,77 +28,70 @@ app.get('/', (req, res) => {
 
   const main = (
     <BaseHtml>
-      <body
-        hx-get={`/todos?filter=${filter}`}
-        hx-trigger="load"
-        hx-target=".header"
-        hx-swap="afterend"
-      >
-        <div>
-          <section class="todoapp">
-            <header class="header">
-              <h1>todos + HTMX</h1>
-              <input
-                class="new-todo"
-                name="text"
-                placeholder="What needs to be done?"
-                autofocus="true"
-                hx-post="/todos"
-                hx-trigger="keyup[keyCode==13]"
-                hx-target=".todo-list"
-                _="on htmx:afterOnLoad set target.value to ''"
-                hx-swap="beforeend"
-              />
-            </header>
-            <footer
-              class="footer"
-              // hx-trigger="load, todoUpdate from:body"
+      <div>
+        <section class="todoapp">
+          <header class="header">
+            <h1>todos + HTMX</h1>
+            <input
+              class="new-todo"
+              name="text"
+              placeholder="What needs to be done?"
+              autofocus="true"
+              hx-post="/todos"
+              hx-trigger="keyup[keyCode==13]"
+              hx-target=".todo-list"
+              _="on htmx:afterOnLoad set target.value to ''"
+              hx-swap="beforeend"
+            />
+          </header>
+          <footer
+            class="footer"
+            // hx-trigger="load, todoUpdate from:body"
+          >
+            <span id="todo-count" class="todo-count" />
+            <ul class="filters">
+              <li>
+                <a href="/" class={clsx({ selected: filter === 'all' })}>
+                  All
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/?filter=active"
+                  class={clsx({ selected: filter === 'active' })}
+                >
+                  Active
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/?filter=completed"
+                  class={clsx({ selected: filter === 'completed' })}
+                >
+                  Completed
+                </a>
+              </li>
+            </ul>
+            <button
+              class="clear-completed"
+              hx-put="/clear-completed"
+              hx-target=".main"
+              hx-swap="outerHTML"
             >
-              <span id="todo-count" class="todo-count" />
-              <ul class="filters">
-                <li>
-                  <a href="/" class={clsx({ selected: filter === 'all' })}>
-                    All
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/?filter=active"
-                    class={clsx({ selected: filter === 'active' })}
-                  >
-                    Active
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/?filter=completed"
-                    class={clsx({ selected: filter === 'completed' })}
-                  >
-                    Completed
-                  </a>
-                </li>
-              </ul>
-              <button
-                class="clear-completed"
-                hx-put="/clear-completed"
-                hx-target=".main"
-                hx-swap="outerHTML"
-              >
-                Clear completed
-              </button>
-            </footer>
-          </section>
-          <footer class="info">
-            <p>Double-click to edit a todo</p>
-            <p>
-              Created by <a href="http://github.com/ryands17/">ryandsouza</a>
-            </p>
-            <p>
-              Part of <a href="http://todomvc.com">TodoMVC</a>
-            </p>
+              Clear completed
+            </button>
           </footer>
-        </div>
-      </body>
+        </section>
+        <footer class="info">
+          <p>Double-click to edit a todo</p>
+          <p>
+            Created by <a href="http://github.com/ryands17/">ryandsouza</a>
+          </p>
+          <p>
+            Part of <a href="http://todomvc.com">TodoMVC</a>
+          </p>
+        </footer>
+      </div>
     </BaseHtml>
   );
 

@@ -13,7 +13,14 @@ export function BaseHtml({ children }: html.PropsWithChildren) {
     <script src="/static/htmx@1.9.8.js"></script>
     <script src="/static/hyperscript@0.9.12.js"></script>
   </head>
-  ${children}
+  <body
+    hx-get="/todos?filter=all"
+    hx-trigger="load"
+    hx-target=".header"
+    hx-swap="afterend"
+  >
+    ${children}
+  </body>
   <script>
     htmx.config.globalViewTransitions = true;
     htmx.config.useTemplateFragments = true;

@@ -23,7 +23,14 @@ export const ToggleAllTodosSchema = z.object({
   allTodosDone: z
     .enum(['on', 'off'])
     .optional()
-    .transform((val) => (val ? val : 'off')),
+    .transform((val) => (val === 'on' ? true : false)),
+});
+
+export const CompleteTodosSchema = z.object({
+  completed: z
+    .enum(['on', 'off'])
+    .optional()
+    .transform((val) => (val === 'on' ? true : false)),
 });
 
 export const EditTodoSchema = z.object({

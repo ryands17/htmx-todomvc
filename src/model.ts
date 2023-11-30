@@ -1,7 +1,6 @@
 import { Entity } from 'electrodb';
 import { Table } from 'sst/node/table';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
 
 const client = new DynamoDBClient();
 
@@ -10,7 +9,7 @@ export const TodoModel = new Entity(
     model: { entity: 'todo', version: '1', service: 'main' },
     attributes: {
       namespace: { type: 'string', default: 'default' },
-      id: { type: 'string', default: () => uuidv4() },
+      id: { type: 'string', required: true },
       text: { type: 'string', required: true },
       completed: { type: 'boolean', required: true, default: false },
     },

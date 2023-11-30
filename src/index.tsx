@@ -1,7 +1,6 @@
 import html from '@kitajs/html';
 import express from 'express';
 import * as schemas from './schemas.js';
-import { v4 as uuidv4 } from 'uuid';
 import { clsx } from 'clsx';
 import { BaseHtml, TodoCount, TodoItem, TodoList } from './components.js';
 import { TodoModel } from './model.js';
@@ -168,27 +167,23 @@ app.post('/todos', async (req, res) => {
 
 app.post('/todos/toggle/:id', async (req, res) => {
   const params = schemas.TodoOperationParamsSchema.parse(req.params);
+  const body = schemas.CompleteTodosSchema.parse(req.body);
 
-  const { data: todo } = await TodoModel.get({
+  const { data: todo } = await TodoModel.patch({
     namespace: NAMESPACE,
     id: params.id,
-  }).go();
+  })
+    .set({ completed: body.completed })
+    .go({ response: 'all_new' });
 
-  if (todo) {
-    await TodoModel.patch({ namespace: NAMESPACE, id: params.id })
-      .set({ completed: !todo.completed })
-      .go();
+  const remainingTodoCount = await fetchRemainingTodoCount();
 
-    todo.completed = !todo.completed;
-    const remainingTodoCount = await fetchRemainingTodoCount();
-
-    res.send(
-      <>
-        <TodoItem todo={todo} />
-        <TodoCount count={remainingTodoCount} />
-      </>,
-    );
-  }
+  res.send(
+    <>
+      <TodoItem todo={todo} />
+      <TodoCount count={remainingTodoCount} />
+    </>,
+  );
 });
 
 app.put('/todos/toggle', async (req, res) => {
@@ -199,7 +194,7 @@ app.put('/todos/toggle', async (req, res) => {
 
   const todos = allTodos.map((todo) => ({
     ...todo,
-    completed: body.allTodosDone === 'on',
+    completed: body.allTodosDone,
   }));
 
   await TodoModel.put(todos).go();
@@ -219,19 +214,15 @@ app.put('/todos/:id', async (req, res) => {
   const { todoText } = schemas.EditTodoSchema.parse(req.body);
   const params = schemas.TodoOperationParamsSchema.parse(req.params);
 
-  const { data: todo } = await TodoModel.get({
+  const { data: todo } = await TodoModel.patch({
     namespace: NAMESPACE,
     id: params.id,
-  }).go();
+  })
+    .set({ text: todoText })
+    .go({ response: 'all_new' });
 
-  if (todo) {
-    await TodoModel.patch({ namespace: NAMESPACE, id: params.id })
-      .set({ text: todoText })
-      .go();
-
-    todo.text = todoText;
-    res.send(<TodoItem todo={todo} />);
-  }
+  todo.text = todoText;
+  res.send(<TodoItem todo={todo} />);
 });
 
 // deleting a todo

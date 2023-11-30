@@ -35,6 +35,7 @@ export function TodoItem({ todo }: { todo: Todo }) {
           class="toggle"
           type="checkbox"
           checked={todo.completed}
+          name="completed"
           hx-post={`/todos/toggle/${todo.id}`}
           hx-target="closest li"
           hx-swap="outerHTML"

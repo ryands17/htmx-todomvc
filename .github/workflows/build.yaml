@@ -13,7 +13,6 @@ jobs:
   build:
     env:
       SST_TELEMETRY_DISABLED: '1'
-      STACK_ENV: 'prod'
 
     runs-on: ubuntu-latest
     steps:
@@ -31,8 +30,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Lint and Test
-        run: pnpm lint
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{secrets.AWS_ROLE_ARN}}
+          role-duration-seconds: 3600
+          aws-region: eu-west-1
 
       - name: Build app
-        run: pnpm app:build
+        run: pnpm build --stage prod
+
+      - name: Lint and Test
+        run: pnpm lint
